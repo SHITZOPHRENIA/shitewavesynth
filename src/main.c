@@ -13,7 +13,7 @@
 #include <sys/types.h>
 
 
-#define NUM_SECONDS         (.04)
+#define NUM_SECONDS         (.065)
 #define SAMPLE_RATE         (48000)
 #define FRAME_PER_BUFFER    (0)
 
@@ -234,9 +234,6 @@ int main(void) {
         }
         if(keystate[SDL_SCANCODE_COMMA]) {
             paErr = genNote(outputParameters, data, stream, 13);
-        }
-        else {
-            continue;
         }
 
     }
