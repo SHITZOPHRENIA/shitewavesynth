@@ -3,23 +3,26 @@
 
 
 
-#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_scancode.h>
 #include <stdio.h>
 #include <math.h>
 #include <portaudio.h>
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_keyboard.h>
+#include <SDL3/SDL_video.h>
+#include <sys/types.h>
 
 
-#define NUM_SECONDS         (.5)
-#define SAMPLE_RATE         (44100)
-#define FRAME_PER_BUFFER    (64)
+#define NUM_SECONDS         (.04)
+#define SAMPLE_RATE         (48000)
+#define FRAME_PER_BUFFER    (0)
 
 #ifndef M_PI
 #define M_PI                (3.14159265)
 #endif
 
-#define SCR_W (120)
-#define SCR_H (100)
+#define SCR_W (460)
+#define SCR_H (380)
 
 
 #define TABLE_SIZE          (200)
@@ -99,6 +102,10 @@ PaError playNote( paData data, PaStream *stream, PaStreamParameters *oParams ) {
 
     PaError paErr;
 
+    sprintf( data.message, "No Message" );
+
+    paErr = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
+    if ( paErr != paNoError ) return oErr_PaError(paErr);
 
     paErr = Pa_StartStream( stream );
     if ( paErr != paNoError ) return oErr_PaError(paErr);
@@ -117,6 +124,22 @@ PaError playNote( paData data, PaStream *stream, PaStreamParameters *oParams ) {
     return paErr;
 
 }
+
+PaError genNote(PaStreamParameters outputParameters, paData data, PaStream* stream, float pitch) {
+    PaError paErr = Pa_OpenStream(&stream,
+                          NULL, // no input
+                          &outputParameters,
+                          SAMPLE_RATE,
+                          FRAME_PER_BUFFER,
+                          paClipOff,
+                          paCallBack,
+                          &data );
+    data = genSineData(pitch);
+    playNote(data, stream, &outputParameters);
+
+    return paErr;
+}
+
 
 int main(void) {
     PaStream *stream;
@@ -144,7 +167,7 @@ int main(void) {
 
     // init SDL
 
-    if( SDL_Init( SDL_INIT_VIDEO ) != 0 ) {
+    if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
         oErr_PrintSDLError("Couldn't init SDL!\n");
         // return -1;
 
@@ -159,45 +182,63 @@ int main(void) {
 
     SDL_Event event;
 
+    const bool* keystate = SDL_GetKeyboardState(NULL);
+
     // MAIN LOOP
-    int running = -1;
-    while (running != 0) {
+    while ( event.type != SDL_EVENT_QUIT ) {
+
+        SDL_PollEvent( &event );
 
         float pitch = 0;
         int i;
 
-        paData data = genSineData(pitch);
-
-        paErr = Pa_OpenStream(  &stream,
-                                NULL, // no input
-                                &outputParameters,
-                                SAMPLE_RATE,
-                                FRAME_PER_BUFFER,
-                                paClipOff,
-                                paCallBack,
-                                &data );
-
-        paErr = Pa_SetStreamFinishedCallback( stream, &StreamFinished );
-        if ( paErr != paNoError ) return oErr_PaError(paErr);
+        paData data;
 
 
-        sprintf( data.message, "No Message" );
-
-        for(i=0; i<13; i++) {
-            paErr = Pa_OpenStream(&stream,
-                                NULL, // no input
-                                &outputParameters,
-                                SAMPLE_RATE,
-                                FRAME_PER_BUFFER,
-                                paClipOff,
-                                paCallBack,
-                                &data );
-            data = genSineData(pitch);
-            if (pitch >= 12) pitch = 0;
-            pitch += 1;
-            playNote(data, stream, &outputParameters);
-
+        // Get keyboard presses:
+        if(keystate[SDL_SCANCODE_Z]) {
+            paErr = genNote(outputParameters, data, stream, 1);
         }
+        if(keystate[SDL_SCANCODE_S]) {
+            paErr = genNote(outputParameters, data, stream, 2);
+        }
+        if(keystate[SDL_SCANCODE_X]) {
+            paErr = genNote(outputParameters, data, stream, 3);
+        }
+        if(keystate[SDL_SCANCODE_D]) {
+            paErr = genNote(outputParameters, data, stream, 4);
+        }
+        if(keystate[SDL_SCANCODE_C]) {
+            paErr = genNote(outputParameters, data, stream, 5);
+        }
+        if(keystate[SDL_SCANCODE_V]) {
+            paErr = genNote(outputParameters, data, stream, 6);
+        }
+        if(keystate[SDL_SCANCODE_G]) {
+            paErr = genNote(outputParameters, data, stream, 7);
+        }
+        if(keystate[SDL_SCANCODE_B]) {
+            paErr = genNote(outputParameters, data, stream, 8);
+        }
+        if(keystate[SDL_SCANCODE_H]) {
+            paErr = genNote(outputParameters, data, stream, 9);
+        }
+        if(keystate[SDL_SCANCODE_N]) {
+            paErr = genNote(outputParameters, data, stream, 10);
+        }
+        if(keystate[SDL_SCANCODE_J]) {
+            paErr = genNote(outputParameters, data, stream, 11);
+        }
+        if(keystate[SDL_SCANCODE_M]) {
+            paErr = genNote(outputParameters, data, stream, 12);
+        }
+        if(keystate[SDL_SCANCODE_COMMA]) {
+            paErr = genNote(outputParameters, data, stream, 13);
+        }
+        else {
+            continue;
+        }
+
     }
 
     // uninit SDL
