@@ -142,7 +142,7 @@ int main(void) {
 
     if ( paErr != paNoError ) return oErr_PaError(paErr);
 
-    // init SDL3
+    // init SDL
 
     if( SDL_Init( SDL_INIT_VIDEO ) != 0 ) {
         oErr_PrintSDLError("Couldn't init SDL!\n");
@@ -200,7 +200,11 @@ int main(void) {
         }
     }
 
+    // uninit SDL
+    SDL_DestroyWindow( window );
+    SDL_Quit();
 
+    // uninit portaudio
     Pa_Terminate();
 
     return 0;
